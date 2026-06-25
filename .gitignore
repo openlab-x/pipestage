@@ -217,6 +217,11 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
+# Build artifacts — never commit these
+dist/
+build/
+*.egg-info/
+
 # Local development notes — not for public repo
 localdev/
 

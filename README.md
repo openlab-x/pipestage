@@ -1,7 +1,7 @@
 # pipestage
 
 <div align="center">
-  <img src="assets/logo.png" width="400"/>
+  <img src="https://raw.githubusercontent.com/openlab-x/pipestage/main/assets/logo.png" width="400"/>
 
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -26,7 +26,7 @@ await (
 
 pipestage is an open-source Python library for building async data pipelines with safe staged processing and bounded concurrency. It is developed by OpenLabX and built entirely on the Python standard library with zero runtime dependencies.
 
-The key difference from raw `asyncio.gather()`: gather is a barrier — stage 2 cannot start until every item from stage 1 is done. pipestage stages are lazy async generators that overlap in time, so stage 2 starts consuming stage 1's output as soon as the first item is ready.
+The key difference from raw `asyncio.gather()`: gather is a barrier - stage 2 cannot start until every item from stage 1 is done. pipestage stages are lazy async generators that overlap in time, so stage 2 starts consuming stage 1's output as soon as the first item is ready.
 
 pipestage is aimed at crawlers, ingestion jobs, API fan-out, file processing, and LLM data pipelines.
 
@@ -259,7 +259,7 @@ examples/
 
 ### Architecture
 
-Every transformation returns a new `Stream` wrapping an async generator. Nothing executes until `collect()` or `for_each()` is awaited. Each stage pulls from the previous one — all stages run simultaneously.
+Every transformation returns a new `Stream` wrapping an async generator. Nothing executes until `collect()` or `for_each()` is awaited. Each stage pulls from the previous one - all stages run simultaneously.
 
 ### Concurrency Model
 
