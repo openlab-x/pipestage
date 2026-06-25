@@ -216,3 +216,17 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local development notes — not for public repo
+localdev/
+
+# HTML docs — hosted on openlabx.com, not in the repo
+docs/
+
+# Word and compiled HTML exports in docs
+docs/*.docx
+docs/all.htm
+
+# Editor
+.vscode/
+.idea/
