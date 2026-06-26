@@ -70,13 +70,19 @@ pipestage is aimed at crawlers, ingestion jobs, API fan-out, file processing, an
 
 ## Install
 
+**From PyPI:**
+```bash
+pip install pipestage
+```
+
+**From source:**
 ```bash
 git clone https://github.com/openlab-x/pipestage.git
 cd pipestage
 pip install -e .
 ```
 
-Requires Python 3.11 or later. No runtime dependencies. PyPI release coming soon.
+Requires Python 3.11 or later. No runtime dependencies.
 
 ## Quick Start
 
