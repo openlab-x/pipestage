@@ -107,12 +107,6 @@ async def filter_stage(
     concurrency: int,
     ordered: bool,
 ) -> AsyncIterator[Any]:
-    if concurrency == 1:
-        async for item in source:
-            if await _coerce(pred, item):
-                yield item
-        return
-
     # reuse map_stage for concurrency/ordering logic; sentinel drops non-matching items
     async def apply(item: Any) -> Any:
         return item if await _coerce(pred, item) else _SKIP

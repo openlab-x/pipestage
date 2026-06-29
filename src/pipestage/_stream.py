@@ -8,9 +8,9 @@ from ._ops import batch_stage, filter_stage, flat_map_stage, map_stage
 T = TypeVar("T")
 
 
-def _check_concurrency(n: int) -> None:
-    if n < 1:
-        raise ValueError(f"concurrency must be >= 1, got {n}")
+def _check_positive(name: str, value: int) -> None:
+    if value < 1:
+        raise ValueError(f"{name} must be >= 1, got {value}")
 
 
 class Stream(Generic[T]):
@@ -27,7 +27,7 @@ class Stream(Generic[T]):
         concurrency: int = 1,
         ordered: bool = True,
     ) -> Stream[Any]:
-        _check_concurrency(concurrency)
+        _check_positive("concurrency", concurrency)
         return Stream(map_stage(self._source, fn, concurrency, ordered))
 
     def filter(
@@ -37,7 +37,7 @@ class Stream(Generic[T]):
         concurrency: int = 1,
         ordered: bool = True,
     ) -> Stream[T]:
-        _check_concurrency(concurrency)
+        _check_positive("concurrency", concurrency)
         return Stream(filter_stage(self._source, pred, concurrency, ordered))
 
     def flat_map(
@@ -47,12 +47,11 @@ class Stream(Generic[T]):
         concurrency: int = 1,
         ordered: bool = True,
     ) -> Stream[Any]:
-        _check_concurrency(concurrency)
+        _check_positive("concurrency", concurrency)
         return Stream(flat_map_stage(self._source, fn, concurrency, ordered))
 
     def batch(self, size: int) -> Stream[list[T]]:
-        if size < 1:
-            raise ValueError(f"batch size must be >= 1, got {size}")
+        _check_positive("size", size)
         return Stream(batch_stage(self._source, size))
 
     async def collect(self) -> list[T]:
@@ -65,7 +64,7 @@ class Stream(Generic[T]):
         concurrency: int = 1,
         ordered: bool = True,
     ) -> None:
-        _check_concurrency(concurrency)
+        _check_positive("concurrency", concurrency)
         async for _ in map_stage(self._source, fn, concurrency, ordered):
             pass
 

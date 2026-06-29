@@ -4,6 +4,16 @@ All notable changes to pipestage will be documented here.
 
 ---
 
+## [0.1.1] - 2026-06-30
+
+### Changed
+
+- `filter_stage` serial branch removed -- all paths now delegate to `map_stage` uniformly
+- Validation helper unified -- `_check_concurrency` replaced with `_check_positive(name, value)` used by all methods including `batch`
+- `__version__` now read dynamically from package metadata via `importlib.metadata.version`
+
+---
+
 ## [0.1.0] - 2026-06-25
 
 ### Added

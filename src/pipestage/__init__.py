@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterable, Iterable
+from importlib.metadata import version
 
 from ._stream import Stream
 from ._utils import to_async_iter
 
-__version__ = "0.1.0"
+__version__ = version("pipestage")
 __all__ = ["stream", "Stream"]
 
 

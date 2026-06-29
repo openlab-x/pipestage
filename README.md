@@ -5,7 +5,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-0.1.0-gray)
+![Version](https://img.shields.io/badge/Version-0.1.1-gray)
 ![Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen)
 
 </div>
@@ -52,8 +52,8 @@ pipestage is aimed at crawlers, ingestion jobs, API fan-out, file processing, an
   - [Concurrency Model](#concurrency-model)
 - [Dependencies](#dependencies)
 - [Python Versions Tested](#python-versions-tested)
-- [Source Code Version 0.1.0](#source-code-version-010)
-- [Known Issues at v0.1.0](#known-issues-at-v010)
+- [Source Code Version 0.1.1](#source-code-version-011)
+- [Known Issues at v0.1.1](#known-issues-at-v011)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
@@ -292,7 +292,7 @@ pip install -e ".[dev]"
 - [x] **Python 3.13**
 - [x] **Python 3.14**
 
-## Source Code Version 0.1.0
+## Source Code Version 0.1.1
 
 - **Core pipeline**: `stream()`, `map`, `filter`, `flat_map`, `batch`, `collect`, `for_each`
 - **Concurrent execution**: ordered and unordered modes with `asyncio.Semaphore`
@@ -300,7 +300,7 @@ pip install -e ".[dev]"
 - **Full test suite**: 44 tests across correctness, concurrency, and error propagation
 - **Zero runtime dependencies**: Python 3.11+ standard library only
 
-## Known Issues at v0.1.0
+## Known Issues at v0.1.1
 
 - All source items are consumed upfront before any results are yielded. For very large sources this can accumulate many Task objects in memory.
 - No per-item timeout. A hung `fn` call blocks its concurrency slot indefinitely.
