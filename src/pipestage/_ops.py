@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, AsyncIterator, Callable
+from collections import deque
+from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable
 from typing import Any
 
 from ._utils import _coerce, to_async_iter
@@ -9,7 +10,7 @@ from ._utils import _coerce, to_async_iter
 _SKIP: Any = object()
 
 
-def _cancel_all(tasks: list[asyncio.Task[Any]]) -> None:
+def _cancel_all(tasks: Iterable[asyncio.Task[Any]]) -> None:
     # synchronous — safe to call from inside an async generator's except/finally block
     # (awaiting inside those blocks is unreliable when the frame is closed externally)
     for t in tasks:
@@ -27,38 +28,52 @@ async def _map_serial(
 async def _map_ordered(
     source: AsyncIterable[Any], fn: Callable[..., Any], concurrency: int
 ) -> AsyncIterator[Any]:
-    # Tasks are created eagerly; semaphore limits active execution, not creation.
+    # Sliding window: at most concurrency * 2 tasks alive at once, refilled
+    # from the source as completed ones are consumed from the front.
+    window = concurrency * 2
     sem = asyncio.Semaphore(concurrency)
 
     async def bounded(item: Any) -> Any:
         async with sem:
             return await _coerce(fn, item)
 
-    tasks: list[asyncio.Task[Any]] = []
+    it = source.__aiter__()
+    tasks: deque[asyncio.Task[Any]] = deque()
+    exhausted = False
+
+    async def fill() -> None:
+        nonlocal exhausted
+        while not exhausted and len(tasks) < window:
+            try:
+                item = await it.__anext__()
+            except StopAsyncIteration:
+                exhausted = True
+                return
+            tasks.append(asyncio.create_task(bounded(item)))
 
     try:
-        async for item in source:
-            tasks.append(asyncio.create_task(bounded(item)))
+        await fill()
+        while tasks:
+            result = await tasks.popleft()
+            yield result
+            await fill()
     except BaseException:
         _cancel_all(tasks)
         raise
-
-    for i, task in enumerate(tasks):
-        try:
-            yield await task
-        except BaseException:
-            _cancel_all(tasks[i + 1 :])
-            raise
 
 
 async def _map_unordered(
     source: AsyncIterable[Any], fn: Callable[..., Any], concurrency: int
 ) -> AsyncIterator[Any]:
-    # results are pushed to a queue as tasks complete, so we emit them as ready
+    # Sliding window, same as _map_ordered, but results are pushed to a queue
+    # as tasks complete so they can be emitted out of order as they're ready.
+    window = concurrency * 2
     sem = asyncio.Semaphore(concurrency)
     result_q: asyncio.Queue[tuple[BaseException | None, Any]] = asyncio.Queue()
-    tasks: list[asyncio.Task[Any]] = []
-    total = 0
+    it = source.__aiter__()
+    tasks: set[asyncio.Task[Any]] = set()
+    exhausted = False
+    pending = 0
 
     async def worker(item: Any) -> None:
         try:
@@ -69,23 +84,35 @@ async def _map_unordered(
             raise
         except BaseException as exc:
             await result_q.put((exc, None))
+        finally:
+            task = asyncio.current_task()
+            if task is not None:
+                tasks.discard(task)
+
+    async def fill() -> None:
+        nonlocal exhausted, pending
+        while not exhausted and len(tasks) < window:
+            try:
+                item = await it.__anext__()
+            except StopAsyncIteration:
+                exhausted = True
+                return
+            tasks.add(asyncio.create_task(worker(item)))
+            pending += 1
 
     try:
-        async for item in source:
-            tasks.append(asyncio.create_task(worker(item)))
-            total += 1
+        await fill()
+        while pending > 0:
+            exc, val = await result_q.get()
+            pending -= 1
+            if exc is not None:
+                _cancel_all(tasks)
+                raise exc
+            yield val
+            await fill()
     except BaseException:
         _cancel_all(tasks)
         raise
-
-    received = 0
-    while received < total:
-        exc, val = await result_q.get()
-        received += 1
-        if exc is not None:
-            _cancel_all(tasks)
-            raise exc
-        yield val
 
 
 def map_stage(

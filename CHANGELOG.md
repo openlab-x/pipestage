@@ -4,6 +4,25 @@ All notable changes to pipestage will be documented here.
 
 ---
 
+## [0.2.0] - 2026-07-26
+
+### Changed
+
+- `_map_ordered` and `_map_unordered` now use a sliding window (at most `concurrency * 2` live tasks) instead of creating a task for every source item upfront - fixes high memory use and unbounded task growth on large or infinite sources
+- `stream()` now returns `Stream[T]` inferred from the source type instead of an untyped `Stream`
+
+### Added
+
+- `Stream.aclose()` - closes the underlying pipeline and cancels in-flight tasks on early exit
+- `pytest-cov` added to dev dependencies
+
+### Fixed
+
+- `test_validation_batch_size` message mismatch left over from the 0.1.1 validation unification (`batch` now raises with "batch size" in the message)
+- Two stale `type: ignore` comments removed after mypy flagged them as unused
+
+---
+
 ## [0.1.1] - 2026-06-30
 
 ### Changed

@@ -51,7 +51,7 @@ class Stream(Generic[T]):
         return Stream(flat_map_stage(self._source, fn, concurrency, ordered))
 
     def batch(self, size: int) -> Stream[list[T]]:
-        _check_positive("size", size)
+        _check_positive("batch size", size)
         return Stream(batch_stage(self._source, size))
 
     async def collect(self) -> list[T]:
@@ -69,4 +69,9 @@ class Stream(Generic[T]):
             pass
 
     def __aiter__(self) -> AsyncIterator[T]:
-        return self._source.__aiter__()  # type: ignore[return-value]
+        return self._source.__aiter__()
+
+    async def aclose(self) -> None:
+        aclose = getattr(self._source, "aclose", None)
+        if aclose is not None:
+            await aclose()

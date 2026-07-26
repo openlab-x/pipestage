@@ -5,7 +5,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-0.1.1-gray)
+![Version](https://img.shields.io/badge/Version-0.2.0-gray)
 ![Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen)
 
 </div>
@@ -45,6 +45,7 @@ pipestage is aimed at crawlers, ingestion jobs, API fan-out, file processing, an
   - [.collect()](#collect)
   - [.for_each()](#for_each)
   - [Async iteration](#async-iteration)
+  - [aclose()](#aclose)
 - [Error Handling](#error-handling)
 - [Examples](#examples)
 - [Project Structure](#project-structure)
@@ -52,8 +53,8 @@ pipestage is aimed at crawlers, ingestion jobs, API fan-out, file processing, an
   - [Concurrency Model](#concurrency-model)
 - [Dependencies](#dependencies)
 - [Python Versions Tested](#python-versions-tested)
-- [Source Code Version 0.1.1](#source-code-version-011)
-- [Known Issues at v0.1.1](#known-issues-at-v011)
+- [Source Code Version 0.2.0](#source-code-version-020)
+- [Known Issues at v0.2.0](#known-issues-at-v020)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
@@ -66,6 +67,8 @@ pipestage is aimed at crawlers, ingestion jobs, API fan-out, file processing, an
 - **Sync and Async**: Pass sync or async functions anywhere. No wrapping required.
 - **Async Generator Source**: `stream()` accepts any async iterable directly.
 - **Fail-Fast Error Handling**: First exception cancels in-flight tasks and propagates unchanged.
+- **Bounded Memory**: Sliding window keeps at most `concurrency * 2` tasks alive at once, even on huge or infinite sources.
+- **Clean Early Exit**: `aclose()` cancels in-flight tasks instead of leaving them running.
 - **Zero Dependencies**: Pure Python standard library. Nothing to install except pipestage itself.
 
 ## Install
@@ -197,6 +200,18 @@ async for item in stream(records).map(transform, concurrency=8):
     print(item)
 ```
 
+### aclose()
+
+Close the pipeline and cancel any in-flight tasks. Useful when breaking out of an `async for` loop early so abandoned work doesn't keep running.
+
+```python
+s = stream(urls).map(fetch, concurrency=20)
+async for item in s:
+    if item["ok"]:
+        break
+await s.aclose()  # cancels the rest of the in-flight fetches
+```
+
 ## Error Handling
 
 The pipeline fails fast by default. The first exception stops the pipeline, cancels in-flight tasks, and propagates the original exception unchanged to the caller.
@@ -257,6 +272,7 @@ tests/
     test_basic.py
     test_concurrency.py
     test_errors.py
+    test_lifecycle.py
 examples/
     raw_X.py        - plain asyncio implementations
     ps_X.py         - pipestage implementations
@@ -272,8 +288,8 @@ Every transformation returns a new `Stream` wrapping an async generator. Nothing
 | concurrency | ordered | Behavior |
 |---|---|---|
 | 1 | any | Serial. No tasks created. |
-| > 1 | True | Semaphore limits active tasks. Results in input order. |
-| > 1 | False | Results emitted via Queue as tasks complete. |
+| > 1 | True | Sliding window (max `concurrency * 2` live tasks), semaphore limits active execution. Results in input order. |
+| > 1 | False | Sliding window, same as above. Results emitted via Queue as tasks complete. |
 
 ## Dependencies
 
@@ -282,7 +298,7 @@ Every transformation returns a new `Stream` wrapping an async generator. Nothing
 **Development:**
 ```bash
 pip install -e ".[dev]"
-# installs: pytest, pytest-asyncio, ruff, mypy
+# installs: pytest, pytest-asyncio, pytest-cov, ruff, mypy
 ```
 
 ## Python Versions Tested
@@ -292,19 +308,19 @@ pip install -e ".[dev]"
 - [x] **Python 3.13**
 - [x] **Python 3.14**
 
-## Source Code Version 0.1.1
+## Source Code Version 0.2.0
 
 - **Core pipeline**: `stream()`, `map`, `filter`, `flat_map`, `batch`, `collect`, `for_each`
 - **Concurrent execution**: ordered and unordered modes with `asyncio.Semaphore`
+- **Bounded task creation**: sliding window, max `concurrency * 2` live tasks, refilled as results are consumed
 - **Async iteration**: `Stream` usable directly in `async for` loops
-- **Full test suite**: 44 tests across correctness, concurrency, and error propagation
+- **`aclose()`**: cancels in-flight tasks on early exit
+- **Full test suite**: 48 tests across correctness, concurrency, lifecycle, and error propagation
 - **Zero runtime dependencies**: Python 3.11+ standard library only
 
-## Known Issues at v0.1.1
+## Known Issues at v0.2.0
 
-- All source items are consumed upfront before any results are yielded. For very large sources this can accumulate many Task objects in memory.
 - No per-item timeout. A hung `fn` call blocks its concurrency slot indefinitely.
-- If a consumer breaks out of `async for` early, in-flight tasks keep running until the event loop cleans them up.
 
 ## Contributing
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pipestage"
-version = "0.1.1"
+version = "0.2.0"
 description = "A Python library for building async data pipelines with safe staged processing and bounded concurrency"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -31,6 +31,7 @@ Repository = "https://github.com/openlab-x/pipestage"
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
     "ruff>=0.4",
     "mypy>=1.10",
 ]
