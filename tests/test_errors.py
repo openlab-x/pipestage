@@ -1,7 +1,9 @@
 """Error propagation tests — fail-fast behavior, no silent swallowing."""
 
 import asyncio
+
 import pytest
+
 from pipestage import stream
 
 

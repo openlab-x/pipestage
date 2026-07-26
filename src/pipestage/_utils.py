@@ -20,5 +20,5 @@ async def to_async_iter(source: Iterable[T] | AsyncIterable[T]) -> AsyncIterator
         async for item in source:
             yield item
     else:
-        for item in source:  # type: ignore[union-attr]
+        for item in source:
             yield item

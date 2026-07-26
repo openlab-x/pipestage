@@ -1,6 +1,7 @@
 """Basic correctness tests — serial paths, no concurrency."""
 
 import pytest
+
 from pipestage import stream
 
 
